@@ -1,0 +1,14 @@
+example file
+
+L 2000
+Wi 200
+Wo 328
+
+vds 45
+
+t 400
+
+e12_0.9
+
+nd 5.0e24
+
