@@ -24,12 +24,13 @@ datafile = pd.read_fwf("corr01.txt",colspecs=[(39,51)],names=['correlation']);
 valid_data = datafile.loc[datafile.index >= 200000] # ignore thermalization data
 
 first_plot = valid_data.plot(
-    title="Correlation data",
+    title="Correlation data plot",
     xlabel="Time (fs)",
-    ylabel="Correlation",
+    ylabel="Current density",
     figsize=(16,9),
     style='r-',  # red color, circle markers, solid line
     grid=True,
+    legend=False
 )
 
-plt.savefig("correlation.png")
+plt.savefig("plot.png")
