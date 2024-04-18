@@ -1,14 +1,13 @@
 example file
 
-L 2000
-Wi 200
-Wo 328
+L (nm)      2000
+Wi (nm)     200
+Wo (nm)     328
 
-vds 45
+Vds(V)      45
 
-t 400
+T(K)        400
 
-e12_0.9
+perm (eV)   0.9e12
 
-nd 5.0e24
-
+Nd(cm-3)    5.0e24
