@@ -1,6 +1,6 @@
 example file
 
-L (nm)      2000
+L (um)      2000
 Wi (nm)     200
 Wo (nm)     328
 
