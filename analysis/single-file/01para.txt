@@ -1,0 +1,13 @@
+example file
+
+L (um)      2000
+Wi (nm)     200
+Wo (nm)     328
+
+Vds(V)      45
+
+T(K)        400
+
+perm (eV)   0.9e12
+
+Nd(cm-3)    5.0e24
