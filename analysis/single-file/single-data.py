@@ -33,7 +33,7 @@ print("\n", valid_data.describe())  # print some statistics
 print("\n", valid_data.head(5))  # print the first 5 rows
 print("\n", valid_data.tail(5))  # print the last 5 rows
 
-print("\nPlotting the data...\n")
+print("\nPlotting the data...")
 
 # plot the datafile
 first_plot = valid_data.plot(
@@ -57,17 +57,24 @@ print("Plot saved as plot.png\n")
 print("\nPerforming Fourier transform...\n")
 N=len(valid_data) # number of data points
 dt=0.2 # 0.2 fs time step
-print("\nNumber of data points: ", N)
+print("Number of data points: ", N)
 print("Time step: ", dt)
 
 currents_array=valid_data['Current'].to_numpy() # convert the current density to a numpy array, as a dataframe column is not a valid input for the fft function
 
-fft_amplitude =fft(currents_array) # fourier transform of the current density
-fft_freq = fftfreq(N, dt) # fourier frequencies
+fft_amplitude =fft(currents_array)[:N//2] # fourier transform of the current density
+fft_freq = fftfreq(N, dt)[:N//2] # fourier frequencies
 # [:N//2] is used to keep only the positive frequencies, as the fft function returns the negative frequencies after the positive ones
 
 fourier = pd.DataFrame({'Frequency':fft_freq, 'Amplitude':np.abs(fft_amplitude)}) # type: ignore # create a dataframe with the fourier data
-print("\n", fourier.head(10))  # print the first 10 rows
+
+print("Fourier transform performed successfully. Showing some statistics and some rows:\n")
+
+print("\n", fourier.describe())  # print some statistics
+print("\n", fourier.head(5))  # print the first 5 rows
+print("\n", fourier.tail(5))  # print the last 5 rows
+
+print("\nPlotting the Fourier transform...")
 
 fourier_plot=fourier.plot(
     x='Frequency',
@@ -79,6 +86,8 @@ fourier_plot=fourier.plot(
     style='b-',  # blue color, solid line
     grid=True,
     legend=False,
-    xlim=([-1e-3,1e-3])  # limit x axis
+    xlim=([0,1e-3])  # limit x axis
 )
 plt.savefig('fourier.png')
+
+print("Fourier plot saved as fourier.png\n")
