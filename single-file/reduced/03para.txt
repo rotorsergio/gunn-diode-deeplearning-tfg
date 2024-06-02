@@ -1,0 +1,13 @@
+﻿example file
+
+L (nm)          2000
+Wi (nm)         200
+Wo (nm)         276
+
+Vds(V)          20
+
+T(K)            400
+
+int.valley(eV)  0.9e12
+
+Nd(cm-3)        5.0e23
