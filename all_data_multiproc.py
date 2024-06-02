@@ -1,5 +1,6 @@
 import time
 import os # for file management
+import glob # for file management
 import numpy as np # linear algebra
 import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
 import matplotlib # for plotting
@@ -16,7 +17,9 @@ parent_dir = 'D:/datos_montecarlo'
 datafile_name = 'corr_reduced'
 plot_name = 'plot.png'
 fourier_name = 'fourier.png'
-exit_path_file = 'C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/exit.csv'
+partial_exit_path = 'C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/partial_exits'
+exit_path = 'C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/exit.csv'
+partial_files = glob.glob(os.path.join(partial_exit_path, "exit_*.csv"))
 dt=2e-16 # 0,2 fs time step
 window_size = 2000 # window size for smoothing
 plot_focus=2e14 # focus on the first 10 GHz, set to .5 for max range
@@ -78,8 +81,8 @@ print("==================================================\n")
 
 file_paths = obtain_paths() # Obtain the paths of all the files in the parent directory
 
-if os.path.isfile(exit_path_file):
-    os.remove(exit_path_file)
+if os.path.isfile(exit_path):
+    os.remove(exit_path)
 
 def process_file(datafile_name):
 
@@ -121,7 +124,7 @@ def process_file(datafile_name):
             title='Current density in Gunn diode',
             xlabel='Time (s)',
             ylabel=' Drain current density',
-            # xlim=([2e5,5e5]),  # limit x axis
+            xlim=([2e5*dt,5e5*dt]),  # limit x axis
             **plot_config
         )
         plt.tight_layout()
@@ -181,15 +184,29 @@ def process_file(datafile_name):
             'FMA': [FMA] # FMA = Frequency of Maximum Amplitude
         })
 
-    header = not os.path.isfile(exit_path_file)
-    exit_df.to_csv(exit_path_file, mode='a', header=header, index=False) # save the exit data as a csv file
+    header = not os.path.isfile(partial_exit_path)
+    exit_df.to_csv(os.path.join(partial_exit_path, f"exit_{os.getpid()}.csv"), mode='a', header=header, index=False)
 
 if perform_multiprocessing:
     if __name__ == '__main__':
         with concurrent.futures.ProcessPoolExecutor() as executor:
             results = list(tqdm(executor.map(process_file, file_paths), total=len(file_paths)))
+            executor.shutdown(wait=True)  # Wait for all tasks to complete
+    
+    # Combine all the files into a single file
+
+    df_from_each_file = (pd.read_csv(f) for f in partial_files)
+    combined_df = pd.concat(df_from_each_file, ignore_index=True)
+    combined_df.to_csv(exit_path, index=False)
+    for file in partial_files:
+        os.remove(file)
+
 else:
     for file in tqdm(file_paths):
+        header = not os.path.isfile(os.path.join(partial_exit_path, f"exit_{os.getpid()}.csv"))
         process_file(file)
+    
+    # Move and rename the file
+    os.rename(os.path.join(partial_exit_path, f"exit_{os.getpid()}.csv"), exit_path)
 
 timeit = time.time() - start_time
