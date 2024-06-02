@@ -5,8 +5,9 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 parent_dir = 'D:/datos_montecarlo'
+heatmaps_dir = 'C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/heatmaps'
 
-df = pd.read_csv(os.path.join(parent_dir, 'exit.csv'))
+df = pd.read_csv('C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/exit.csv')
 
 unique_temperatures = [300.0,400.0,500.0]
 unique_impurifications = [5e+23,1e+24,5e+24,1e+25]
@@ -19,7 +20,7 @@ for temp in unique_temperatures:
         
         # Pivot the DataFrame (arrange like a matrix)
         mod_df = filter_df.pivot(index='Wo', columns='Vds', values='Mod index')
-        freq_df = filter_df.pivot(index='Wo', columns='Vds', values='Main F Freq')
+        freq_df = filter_df.pivot(index='Wo', columns='Vds', values='FMA')
 
         # Convert the columns to integers
         mod_df.columns = mod_df.columns.astype(int)
@@ -52,7 +53,7 @@ for temp in unique_temperatures:
 
         # Save the heatmap
         plt.tight_layout()
-        plt.savefig(f'heatmap_{temp}K_{Nd}cm-3.png')
+        plt.savefig(os.path.join(heatmaps_dir, f'heatmap_{temp}(K)_{Nd}(m-3).png'))
         plt.clf()
 
         del filter_df, mod_df, freq_df
