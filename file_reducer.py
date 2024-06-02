@@ -1,5 +1,4 @@
 ﻿import os
-import sys
 from tqdm import tqdm # for progress bar
 from multiprocessing import Pool, cpu_count
 
@@ -7,31 +6,18 @@ from multiprocessing import Pool, cpu_count
 # sys.stdout = open('output.txt', 'w')
 # sys.stderr = sys.stdout
 
-# Specify the parent directory
-parent_dir = 'D:/datos_montecarlo'
-
-# Get a list of all 'CORR01' files
-files = [os.path.join(dirpath, file)
-         for dirpath, dirnames, filenames in os.walk(parent_dir)
-         for file in filenames if file == 'CORR01']
-
 # Function to process a single file
 def process_file(file_path):
-    
-    colspecs = [(56, 69)]
-
+    colspecs = [(53, 66)]
     # Read the file
     with open(file_path, 'r') as f:
         data = f.readlines()
-
     # Extract the 5th column
     column5 = [line[colspecs[0][0]:colspecs[0][1]] for line in data]
-
     # Write the selected column to a new file
     with open(file_path.replace('CORR01', 'corr_reduced'), 'w') as f:
         for item in column5:
             f.write("%s\n" % item)
-    
     # Delete the original file
     os.remove(file_path)
 
