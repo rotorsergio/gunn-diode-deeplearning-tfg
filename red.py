@@ -53,7 +53,7 @@ X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_st
 Z_train, Z_val, w_train, w_val = train_test_split(Z, w, test_size=0.2, random_state=32)
 
 # Create the first model for normalized data
-model_norm = create_model()  # Assuming create_model() is a function that returns a new instance of your model
+model_norm = create_model()
 model_norm.compile(optimizer='adam', loss='mean_squared_error')
 
 # Train the first model
@@ -83,7 +83,6 @@ plt.title('Model loss for normalized data')
 plt.xlabel('Epoch')
 plt.ylabel('Loss')
 plt.legend(['Train', 'Validation'], loc='upper right')
-plt.show()
 plt.savefig('C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/loss_function_norm.png')
 
 plt.figure(figsize=(16, 9))
@@ -93,5 +92,4 @@ plt.title('Model loss for standardized data')
 plt.xlabel('Epoch')
 plt.ylabel('Loss')
 plt.legend(['Train', 'Validation'], loc='upper right')
-plt.show()
 plt.savefig('C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/loss_function_std.png')
