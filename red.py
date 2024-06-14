@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import keras
 from tensorflow.python.keras.layers import Dense
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error
 
 norm_dataset_path = 'C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/normalized.csv'
 std_dataset_path = 'C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/standardized.csv'
@@ -60,8 +61,11 @@ model_norm.compile(optimizer='adam', loss='mean_squared_error')
 print('Training the model for normalized data...')
 history_norm = model_norm.fit(X_train, y_train, epochs=100, validation_data=(X_val, y_val), verbose='1')
 
+norm_predict_test = model_norm.predict(X_val) # Predict the validation data. Optimal: use a different dataset for testing
+norm_score = mean_squared_error(y_val, norm_predict_test) # Calculate the accuracy of the model
+
 # Save the first model
-model_norm.save('C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/model_norm.h5')
+model_norm.save('C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/model_norm.keras')
 
 # Create the second model for standardized data
 model_std = create_model()  # Assuming create_model() is a function that returns a new instance of your model
@@ -71,8 +75,11 @@ model_std.compile(optimizer='adam', loss='mean_squared_error')
 print('Training the model for standardized data...')
 history_std = model_std.fit(Z_train, w_train, epochs=100, validation_data=(Z_val, w_val), verbose='1')
 
+std_predict_test = model_std.predict(Z_val) # Predict the validation data. Optimal: use a different dataset for testing
+std_score = mean_squared_error(w_val, std_predict_test) # Calculate the accuracy of the model
+
 # Save the second model
-model_std.save('C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/model_std.h5')
+model_std.save('C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/model_std.keras')
 
 # Print the training history from both models
 
@@ -83,6 +90,7 @@ plt.title('Model loss for normalized data')
 plt.xlabel('Epoch')
 plt.ylabel('Loss')
 plt.legend(['Train', 'Validation'], loc='upper right')
+plt.text(50, 0.25, 'MSE: ' + str(norm_score), style='italic', weight='bold')
 plt.savefig('C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/loss_function_norm.png')
 
 plt.figure(figsize=(16, 9))
@@ -92,4 +100,5 @@ plt.title('Model loss for standardized data')
 plt.xlabel('Epoch')
 plt.ylabel('Loss')
 plt.legend(['Train', 'Validation'], loc='upper right')
+plt.text(50, 1, 'MSE: ' + str(std_score), style='italic', weight='bold')
 plt.savefig('C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/loss_function_std.png')
