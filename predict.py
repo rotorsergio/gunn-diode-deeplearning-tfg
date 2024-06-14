@@ -40,10 +40,14 @@ def get_values_from_pkl(values_path):
     return mean, std, max, min
 
 def normalize_data(data, max, min):
-    return (data - min) / (max - min)
+    data = (data - min) / (max - min)
+    print('Norm data: \n', data)
+    return data
 
 def standardize_data(data, mean, std):
-    return (data - mean) / std
+    data = (data - mean) / std
+    print('Std data: \n', data)
+    return data
 
 def predict(input_df, model_path):
     model = keras.models.load_model(model_path)
@@ -73,14 +77,25 @@ if __name__ == '__main__':
     
     print('Normalization and standardization of the input data...')
     norm_df = normalize_data(input_df, max, min)
+    norm_df = norm_df.drop(columns=['Mod index'])
     std_df = standardize_data(input_df, mean, std)
+    std_df = std_df.drop(columns=['Mod index'])
 
     print('Predicting the data...')
     norm_prediction = predict(norm_df, norm_model_path)
     std_prediction = predict(std_df, std_model_path)
 
+    # Append 'Mod index' as the last column
     norm_df['Mod index'] = norm_prediction.flatten()
     std_df['Mod index'] = std_prediction.flatten()
+
+    norm_df = norm_df[['Wo', 'Vds', 'Temp', 'Nd', 'Mod index']]
+    std_df = std_df[['Wo', 'Vds', 'Temp', 'Nd', 'Mod index']]
+
+    '''
+    norm_df.insert(4, 'Mod index', norm_prediction.flatten())
+    std_df.insert(4, 'Mod index', std_prediction.flatten())
+    '''
 
     print('Denormalization and destandardization of the prediction data...')
     denorm_df = denormalize_data(norm_df, max, min)

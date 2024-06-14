@@ -18,6 +18,21 @@ min = df.min()
 with open(values_path, 'wb') as f:
     pkl.dump({'mean': mean, 'std': std, 'max': max, 'min': min}, f)
 
+# Load the values FOR LATER USE
+"""
+with open(values_path, 'rb') as f:
+    values = pkl.load(f)
+    mean = values['mean']
+    std = values['std']
+    max = values['max']
+    min = values['min']
+
+# Denormalize the data
+df = df * std + mean
+# Destandardize the data
+df = df * (max - min) + min
+"""
+
 # Standardize and normalize the data (checking which is best later)
 std_df = (df - mean) / std
 norm_df = (df - min) / (max - min)
