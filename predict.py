@@ -7,11 +7,11 @@ import keras
 # ========== CONSTANTS ==========
 desired_number_of_points: int = 20
 
-norm_model_path = 'C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/model_norm.keras'
-std_model_path = 'C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/model_std.keras'
+norm_model_path = 'C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/models/model_norm.keras'
+std_model_path = 'C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/models/model_std.keras'
 
-norm_prediction_path = 'C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/norm_prediction.csv'
-std_prediction_path = 'C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/std_prediction.csv'
+norm_prediction_path = 'C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/datasets/norm_prediction.csv'
+std_prediction_path = 'C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/datasets/std_prediction.csv'
 
 # ========== FUNCTIONS ==========
 
@@ -91,11 +91,6 @@ if __name__ == '__main__':
 
     norm_df = norm_df[['Wo', 'Vds', 'Temp', 'Nd', 'Mod index']]
     std_df = std_df[['Wo', 'Vds', 'Temp', 'Nd', 'Mod index']]
-
-    '''
-    norm_df.insert(4, 'Mod index', norm_prediction.flatten())
-    std_df.insert(4, 'Mod index', std_prediction.flatten())
-    '''
 
     print('Denormalization and destandardization of the prediction data...')
     denorm_df = denormalize_data(norm_df, max, min)

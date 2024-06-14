@@ -5,10 +5,25 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
-parent_dir = 'D:/datos_montecarlo'
 heatmaps_dir = 'C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/heatmaps'
+datasets_dir = 'C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/datasets'
 
-df = pd.read_csv('C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/exit.csv')
+datamode='std_prediction' # Modes: 'original', 'norm_prediction', 'std_prediction'
+map_modes = ['wo-v', 'nd-v']
+mode = map_modes[1]
+
+if datamode == 'original':
+    df = pd.read_csv(os.path.join(datasets_dir, 'exit.csv'))
+    save_dir = os.path.join(heatmaps_dir, 'original')
+elif datamode == 'norm_prediction':
+    df = pd.read_csv(os.path.join(datasets_dir, datamode + '.csv'))
+    save_dir = os.path.join(heatmaps_dir, 'norm_prediction')
+elif datamode == 'std_prediction':
+    df = pd.read_csv(os.path.join(datasets_dir, datamode + '.csv'))
+    save_dir = os.path.join(heatmaps_dir, 'std_prediction')
+else:
+    raise ValueError('Invalid data mode')
+
 df['Wo']=df['Wo'].astype(int)
 df['Vds']=df['Vds'].astype(int)
 df['Temp']=df['Temp'].astype(int)
@@ -17,17 +32,17 @@ df['Nd'] = df['Nd'].apply(lambda x: round(x, -int(np.floor(np.log10(abs(x)))))) 
 global_min = df['Mod index'].min()
 global_max = df['Mod index'].max()
 
-unique_temperatures = [300, 400, 500]
-unique_impurifications = [5e+23, 1e+24, 5e+24, 1e+25]
-unique_w0 = [200, 220, 252, 276, 304, 328, 352]
-
-map_modes = ['wo-v', 'nd-v']
-mode = map_modes[1]
+# Dynamically obtain unique values of the fixed variable
+unique_temperatures = sorted(pd.unique(df['Temp']))
+unique_impurifications = sorted(pd.unique(df['Nd']))
+unique_w0 = sorted(pd.unique(df['Wo']))
 
 if mode == map_modes[0]:
     fixed_vars = unique_impurifications
 elif mode == map_modes[1]:
     fixed_vars = unique_w0
+else:
+    raise ValueError('Invalid heatmap mode')
 
 # Outer progress bar
 with tqdm(total=len(fixed_vars), desc="Overall Progress", position=0) as pbar1:
@@ -57,9 +72,9 @@ with tqdm(total=len(fixed_vars), desc="Overall Progress", position=0) as pbar1:
                             transform=axs[i].transAxes, color='white', fontsize=14)
 
                 if mode == map_modes[0]:
-                    plt.savefig(os.path.join(heatmaps_dir, f'{mode}', f'{var}.png'))  # Format Nd value
+                    plt.savefig(os.path.join(heatmaps_dir, f'{datamode}', f'{mode}', f'{var}.png'))
                 elif mode == map_modes[1]:
-                    plt.savefig(os.path.join(heatmaps_dir, f'{mode}', f'{var}.png'))
+                    plt.savefig(os.path.join(heatmaps_dir, f'{datamode}', f'{mode}', f'{var}.png'))
 
                 pbar2.update()  # Update inner progress bar after each temperature
 
