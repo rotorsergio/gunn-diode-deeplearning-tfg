@@ -10,7 +10,7 @@ datasets_dir = 'C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/datasets
 
 datamode='std_prediction' # Modes: 'original', 'norm_prediction', 'std_prediction'
 map_modes = ['wo-v', 'nd-v']
-mode = map_modes[1]
+mode = map_modes[0]
 
 if datamode == 'original':
     df = pd.read_csv(os.path.join(datasets_dir, 'exit.csv'))
