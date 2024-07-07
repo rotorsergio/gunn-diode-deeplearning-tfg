@@ -19,9 +19,9 @@ def clear_directory(directory):
 
 clear_directory(heatmaps_dir)
 
-datamode='std_prediction' # Modes: 'original', 'norm_prediction', 'std_prediction'
+datamode='fine' # Modes: 'original', 'norm_prediction', 'std_prediction', 'fine'
 map_modes = ['wo-v', 'nd-v']
-mode = map_modes[0]
+mode = map_modes[1]
 
 if datamode == 'original':
     df = pd.read_csv(os.path.join(datasets_dir, 'exit.csv'))
@@ -32,6 +32,9 @@ elif datamode == 'norm_prediction':
 elif datamode == 'std_prediction':
     df = pd.read_csv(os.path.join(datasets_dir, datamode + '.csv'))
     save_dir = os.path.join(heatmaps_dir, 'std_prediction')
+elif datamode == 'fine':
+    df = pd.read_csv(os.path.join(datasets_dir, 'fine_prediction.csv'))
+    save_dir = os.path.join(heatmaps_dir, 'fine')
 else:
     raise ValueError('Invalid data mode')
 
@@ -75,7 +78,7 @@ with tqdm(total=len(fixed_vars), desc="Overall Progress", position=0) as pbar1:
                     mod_df = mod_df.sort_index(ascending=False)
                     fixed_var_text = f'$Wo: {var} nm$'
 
-                im = sns.heatmap(mod_df, ax=axs[i], annot=False, cmap='coolwarm', vmin=global_min, vmax=global_max)
+                im = sns.heatmap(mod_df, ax=axs[i], annot=False, cmap='coolwarm') # , vmin=global_min, vmax=global_max)
                 axs[i].set_title(f'Temperature: {temp} K')
 
                 axs[i].text(0.5, 0.5, f'{fixed_var_text}\n$\\varepsilon_{{1,2}} = 0.9 \\times 10^{{12}}$', 

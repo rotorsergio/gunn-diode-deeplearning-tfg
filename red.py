@@ -17,11 +17,11 @@ print('Keras version: ', keras.__version__)
 # activation_functions = ['relu', 'tanh', 'sigmoid', 'softmax', 'softplus', 'softsign', 'selu', 'elu', 'exponential']
 # optimizers = ['adam', 'sgd', 'rmsprop', 'adadelta', 'adagrad', 'adamax', 'nadam', 'ftrl']
 
-random_seed = 47
-activation_function = 'sigmoid'
-optimizer_choose = 'adam' # 'adam', 'sgd', 'rmsprop', 'adadelta', 'adagrad', 'adamax', 'nadam', 'ftrl'
-loss_function = 'mean_squared_error' # Representation wont be changed by this!!!!!
-density: int = 20
+random_seed = 1
+activation_function = 'tanh'
+optimizer_choose = 'adam'
+loss_function = 'mean_squared_error'
+density: int = 10
 number_epochs: int = 500
 
 # =================== NEURAL NETWORK ====================
@@ -30,6 +30,7 @@ def create_model():
     model = keras.Sequential(
         [
             keras.layers.Input(shape=(4,)),
+            keras.layers.Dense(density, activation=activation_function),
             keras.layers.Dense(density, activation=activation_function),
             keras.layers.Dense(1, activation=activation_function)
         ]
@@ -40,16 +41,6 @@ def create_model():
     return model
 
 # =================== TRAINING ====================
-
-# The model needs to be compiled before training
-# The optimizer is the algorithm used to update the weights of the model
-# The loss function is the function that the model tries to minimize
-# The metrics are the metrics used to evaluate the model
-# The most common loss function for regression problems is the mean squared error
-# The most common optimizer is the Adam optimizer: based con gradient descent
-# The most common metric for regression problems is the mean squared error
-
-# Now the model is ready to be trained with model.fit()
 
 norm_df = pd.read_csv(norm_dataset_path)
 std_df = pd.read_csv(std_dataset_path)
@@ -67,15 +58,17 @@ Z_train, Z_val, w_train, w_val = train_test_split(Z, w, test_size=0.2, random_st
 # Create the first model for normalized data
 model_norm = create_model()
 model_norm.compile(optimizer=optimizer_choose, loss=loss_function)
+
 print('Training the model for normalized data...')
-history_norm = model_norm.fit(X_train, y_train, epochs=number_epochs, validation_data=(X_val, y_val), batch_size=8, verbose='1')
+history_norm = model_norm.fit(X_train, y_train, epochs=number_epochs, validation_data=(X_val, y_val), batch_size=8)
 model_norm.save('C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/model_norm.keras')
 
 # Create the second model for standardized data
 model_std = create_model()  # Assuming create_model() is a function that returns a new instance of your model
 model_std.compile(optimizer=optimizer_choose, loss=loss_function)
+
 print('Training the model for standardized data...')
-history_std = model_std.fit(Z_train, w_train, epochs=number_epochs, validation_data=(Z_val, w_val),batch_size=8, verbose='1')
+history_std = model_std.fit(Z_train, w_train, epochs=number_epochs, validation_data=(Z_val, w_val), batch_size=8)
 model_std.save('C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/model_std.keras')
 
 # Print the training history from both models
@@ -97,3 +90,27 @@ plt.xlabel('Epoch')
 plt.ylabel('Loss')
 plt.legend(['Train', 'Validation'], loc='upper right')
 plt.savefig('C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/plots/loss_function_std.png')
+
+# Represent prediction versus real data
+
+y_pred_norm_train = model_norm.predict(X_train)
+y_pred_norm_val = model_norm.predict(X_val)
+
+plt.figure(figsize=(16, 9))
+plt.subplot(1, 2, 1)
+plt.plot(y_train, y_pred_norm_train, 'o', label='Train')
+plt.subplot(1, 2, 2)
+plt.plot(y_val, y_pred_norm_val, 'o', label='Validation')
+plt.savefig('C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/plots/dispersion_norm.png')
+plt.close()
+
+w_pred_std_train = model_std.predict(Z_train)
+w_pred_std_val = model_std.predict(Z_val)
+
+plt.figure(figsize=(16, 9))
+plt.subplot(1, 2, 1)
+plt.plot(w_train, w_pred_std_train, 'o', label='Train')
+plt.subplot(1, 2, 2)
+plt.plot(w_val, w_pred_std_val, 'o', label='Validation')
+plt.savefig('C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/plots/dispersion_std.png')
+plt.close()
