@@ -5,7 +5,7 @@ import itertools
 import keras
 
 # ========== CONSTANTS ==========
-desired_number_of_points: int = 20
+desired_number_of_points: int = 21
 
 norm_model_path = 'C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/models/model_norm.keras'
 std_model_path = 'C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/models/model_std.keras'
@@ -72,6 +72,7 @@ def destandardize_data(data, mean, std):
 if __name__ == '__main__':
 
     input_df = generate_input_data()
+    print(input_df)
     print('Original shape: ', input_df.shape)
     mean, std, max, min = get_values_from_pkl('C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/values.pkl')
     

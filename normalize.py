@@ -1,9 +1,9 @@
 ﻿import pandas as pd
 import pickle as pkl # pickle is a module that serializes python objects
 
-exit_path = 'C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/exit.csv'
-normalized_path = 'C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/normalized.csv'
-standardized_path = 'C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/standardized.csv'
+exit_path = 'C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/datasets/exit.csv'
+normalized_path = 'C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/datasets/normalized.csv'
+standardized_path = 'C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/datasets/standardized.csv'
 values_path = 'C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/values.pkl'
 
 df = pd.read_csv(exit_path)

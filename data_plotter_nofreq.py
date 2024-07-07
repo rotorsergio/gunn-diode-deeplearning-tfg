@@ -8,6 +8,17 @@ from tqdm import tqdm
 heatmaps_dir = 'C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/heatmaps'
 datasets_dir = 'C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/datasets'
 
+def clear_directory(directory):
+    for filename in os.listdir(directory):
+        file_path = os.path.join(directory, filename)
+        try:
+            if os.path.isfile(file_path) or os.path.islink(file_path):
+                os.remove(file_path)
+        except Exception as e:
+            print(f'Failed to delete {file_path}. Reason: {e}')
+
+clear_directory(heatmaps_dir)
+
 datamode='std_prediction' # Modes: 'original', 'norm_prediction', 'std_prediction'
 map_modes = ['wo-v', 'nd-v']
 mode = map_modes[0]
@@ -71,11 +82,9 @@ with tqdm(total=len(fixed_vars), desc="Overall Progress", position=0) as pbar1:
                             horizontalalignment='center', verticalalignment='center', 
                             transform=axs[i].transAxes, color='white', fontsize=14)
 
-                if mode == map_modes[0]:
-                    plt.savefig(os.path.join(heatmaps_dir, f'{datamode}', f'{mode}', f'{var}.png'))
-                elif mode == map_modes[1]:
-                    plt.savefig(os.path.join(heatmaps_dir, f'{datamode}', f'{mode}', f'{var}.png'))
+                plt.savefig(os.path.join(heatmaps_dir, f'{datamode}', f'{mode}', f'{var}.png'))
 
                 pbar2.update()  # Update inner progress bar after each temperature
 
+        plt.close()
         pbar1.update()  # Update outer progress bar after each variable

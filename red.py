@@ -19,10 +19,10 @@ print('Keras version: ', keras.__version__)
 
 random_seed = 47
 activation_function = 'sigmoid'
-optimizer_choose = 'adam'
+optimizer_choose = 'adam' # 'adam', 'sgd', 'rmsprop', 'adadelta', 'adagrad', 'adamax', 'nadam', 'ftrl'
 loss_function = 'mean_squared_error' # Representation wont be changed by this!!!!!
-density: int = 10
-number_epochs: int = 1000
+density: int = 20
+number_epochs: int = 500
 
 # =================== NEURAL NETWORK ====================
 
@@ -31,8 +31,7 @@ def create_model():
         [
             keras.layers.Input(shape=(4,)),
             keras.layers.Dense(density, activation=activation_function),
-#            keras.layers.Dense(density, activation=activation_function),
-            keras.layers.Dense(1)
+            keras.layers.Dense(1, activation=activation_function)
         ]
     )
 
@@ -68,29 +67,15 @@ Z_train, Z_val, w_train, w_val = train_test_split(Z, w, test_size=0.2, random_st
 # Create the first model for normalized data
 model_norm = create_model()
 model_norm.compile(optimizer=optimizer_choose, loss=loss_function)
-
-# Train the first model
 print('Training the model for normalized data...')
-history_norm = model_norm.fit(X_train, y_train, epochs=number_epochs, validation_data=(X_val, y_val), batch_size=8 ,verbose='1')
-
-norm_predict_test = model_norm.predict(X_val) # Predict the validation data. Optimal: use a different dataset for testing
-norm_score = mean_squared_error(y_val, norm_predict_test) # Calculate the error of the model after all epochs usign val_data
-
-# Save the first model
+history_norm = model_norm.fit(X_train, y_train, epochs=number_epochs, validation_data=(X_val, y_val), batch_size=8, verbose='1')
 model_norm.save('C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/model_norm.keras')
 
 # Create the second model for standardized data
 model_std = create_model()  # Assuming create_model() is a function that returns a new instance of your model
 model_std.compile(optimizer=optimizer_choose, loss=loss_function)
-
-# Train the second model
 print('Training the model for standardized data...')
 history_std = model_std.fit(Z_train, w_train, epochs=number_epochs, validation_data=(Z_val, w_val),batch_size=8, verbose='1')
-
-std_predict_test = model_std.predict(Z_val) # Predict the validation data. Optimal: use a different dataset for testing
-std_score = mean_squared_error(w_val, std_predict_test) # Calculate the error of the model after all epochs usign val_data
-
-# Save the second model
 model_std.save('C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/model_std.keras')
 
 # Print the training history from both models
@@ -102,7 +87,7 @@ plt.title('Model loss for normalized data')
 plt.xlabel('Epoch')
 plt.ylabel('Loss')
 plt.legend(['Train', 'Validation'], loc='upper right')
-plt.savefig('C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/loss_function_norm.png')
+plt.savefig('C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/plots/loss_function_norm.png')
 
 plt.figure(figsize=(16, 9))
 plt.plot(history_std.history['loss'])
@@ -111,4 +96,4 @@ plt.title('Model loss for standardized data')
 plt.xlabel('Epoch')
 plt.ylabel('Loss')
 plt.legend(['Train', 'Validation'], loc='upper right')
-plt.savefig('C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/loss_function_std.png')
+plt.savefig('C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/plots/loss_function_std.png')
