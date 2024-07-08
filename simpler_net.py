@@ -25,9 +25,11 @@ print('Keras version: ', keras.__version__)
 # activation_functions = ['relu', 'tanh', 'sigmoid', 'softmax', 'softplus', 'softsign', 'selu', 'elu', 'exponential']
 # optimizers = ['adam', 'sgd', 'rmsprop', 'adadelta', 'adagrad', 'adamax', 'nadam', 'ftrl']
 
-densidad: int = 10
-funcion_activacion = 'sigmoid'
-random_seed = 10
+densidad: int = 20
+funcion_activacion = 'relu'
+funcion_perdida = 'huber'
+optimizador = 'adam'
+random_seed = 47
 number_epochs: int = 200
 
 # =================== NEURAL NETWORK ====================
@@ -37,12 +39,13 @@ model = keras.Sequential(
         keras.layers.Input(shape=(3,)),
         keras.layers.Dense(densidad, activation=funcion_activacion),
         keras.layers.Dense(densidad, activation=funcion_activacion),
-        keras.layers.Dense(1)
+        keras.layers.Dense(densidad, activation=funcion_activacion),
+        keras.layers.Dense(1, activation='linear')
     ]
 )
 
 model.summary()
-model.compile(optimizer='adam', loss='mean_squared_error')
+model.compile(optimizer=optimizador, loss=funcion_perdida)
 
 # =================== PREPARE DATA ====================
 
@@ -59,9 +62,6 @@ y = scaled.iloc[:, -1]
 
 Xarray = scaled_array[:, :-1]
 yarray = scaled_array[:, -1]
-
-print(Xarray)
-print(yarray)
 
 # Split the dataset into 80% training data and 20% validation data
 # Xtrain, Xval, ytrain, yval = train_test_split(X, y, test_size=0.2, random_state=random_seed)

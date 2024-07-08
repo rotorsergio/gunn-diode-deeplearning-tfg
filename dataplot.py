@@ -19,9 +19,9 @@ def clear_directory(directory):
 
 clear_directory(heatmaps_dir)
 
-datamode='fine' # Modes: 'original', 'norm_prediction', 'std_prediction', 'fine'
+datamode='std_prediction' # Modes: 'original', 'norm_prediction', 'std_prediction', 'fine'
 map_modes = ['wo-v', 'nd-v']
-mode = map_modes[1]
+mode = map_modes[0]
 
 if datamode == 'original':
     df = pd.read_csv(os.path.join(datasets_dir, 'exit.csv'))
