@@ -10,8 +10,8 @@ norm_reduced_path = 'C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/dat
 values_path = 'C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/values.pkl'
 fine_values_path = 'C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/fine_values.pkl'
 
-df = pd.read_csv(reduced_path)
-# df = df.drop(columns=['Intervalley', 'FMA'])
+df = pd.read_csv(exit_path)
+df = df.drop(columns=['Intervalley', 'Main F Freq'])
 
 mean = df.mean()
 std = df.std()
@@ -19,7 +19,7 @@ max = df.max()
 min = df.min()
 
 # Save the values
-with open(fine_values_path, 'wb') as f:
+with open(values_path, 'wb') as f:
     pkl.dump({'mean': mean, 'std': std, 'max': max, 'min': min}, f)
 
 # Load the values FOR LATER USE
@@ -41,8 +41,8 @@ df = df * (max - min) + min
 # std_df = (df - mean) / std
 norm_df = (df - min) / (max - min)
 
-norm_df['Wo'] = 0
+# norm_df['Wo'] = 0
 
-norm_df.to_csv(norm_reduced_path, index=False)
-# norm_df.to_csv(normalized_path, index=False)
+# norm_df.to_csv(norm_reduced_path, index=False)
+norm_df.to_csv(normalized_path, index=False)
 # std_df.to_csv(standardized_path, index=False)
