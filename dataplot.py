@@ -19,7 +19,7 @@ def clear_directory(directory):
 
 clear_directory(heatmaps_dir)
 
-datamode='og_prediction' # Modes: 'original', 'norm_prediction', 'std_prediction', 'fine', 'og_prediction'
+datamode='norm_prediction' # Modes: 'original', 'norm_prediction', 'std_prediction', 'fine', 'og_prediction'
 map_modes = ['wo-v', 'nd-v']
 mode = map_modes[0]
 

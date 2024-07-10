@@ -20,7 +20,7 @@ random_seed = 1
 activation_function = 'sigmoid'
 optimizer_choose = 'adam'
 loss_function = 'mean_squared_error'
-density: int = 50
+density: int = 100
 number_epochs: int = 500
 
 # =================== NEURAL NETWORK ====================
@@ -29,7 +29,6 @@ def create_model():
     model = keras.Sequential(
         [
             keras.layers.Input(shape=(4,)),
-            keras.layers.Dense(density, activation=activation_function),
             keras.layers.Dense(density, activation=activation_function),
             keras.layers.Dense(density, activation=activation_function),
             keras.layers.Dense(1, activation='linear')
@@ -65,7 +64,7 @@ model_norm.save('C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/models/
 
 '''
 # Create the second model for standardized data
-model_std = create_model()  # Assuming create_model() is a function that returns a new instance of your model
+model_std = create_model()
 model_std.compile(optimizer=optimizer_choose, loss=loss_function)
 
 print('Training the model for standardized data...')

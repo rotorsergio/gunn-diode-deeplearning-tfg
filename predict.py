@@ -20,13 +20,13 @@ fine_prediction_path = 'C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/
 def generate_input_data():
 
     # Define the input data
-    Wo = np.linspace(200, 360, num=desired_number_of_points) #Create an array from 200 to 360 with 20 points
+    Wo = np.arange(200, 360, 8) # Create an array from 200 to 360 with a step of 8
     # Wo = 0
-    Vds = np.arange(10, 61, 1) #Create an array from 10 to 60 with a step of 1
+    Vds = np.arange(10, 65, 5) #Create an array from 10 to 60 with a step of 1
     # Vds = np.arange(1, 61, 1) #Create an array from 10 to 60 with a step of 1
     Temp = np.array([300, 400, 500])
     Nd = np.array([0.5, 1, 5, 10])*1e24
-    # Nd = np.arange(0.5, 11.5, 1)*1e24 #Create an array from 0.5 to 10.5 with a step of 1
+    # Nd = np.arange(0.5, 10.5, 0.5)*1e24
 
     #Create the input dataframe as an iteration of all the possible combinations of the input data
     combinations = itertools.product(Wo, Vds, Temp, Nd)
@@ -34,8 +34,6 @@ def generate_input_data():
     input_df = pd.DataFrame(combinations, columns=['Wo', 'Vds', 'Temp', 'Nd'])
     # input_df = pd.DataFrame(combinations, columns=['Vds', 'Temp', 'Nd'])
     # input_df['Wo'] = Wo
-    print('Input dataframe:')
-    print(input_df)
 
     return input_df
 
@@ -46,32 +44,16 @@ def get_values_from_pkl(values_path):
         std = values['std']
         max = values['max']
         min = values['min']
-        print('Pickle saved values:\n', values)
+
     return mean, std, max, min
 
 def normalize_data(data, max, min):
     data = (data - min) / (max - min)
-    print('Normalized data: \n', data)
     return data
 
 def standardize_data(data, mean, std):
     data = (data - mean) / std
-    print('Standardized data: \n', data)
     return data
-
-def prediction(input_df, model_path):
-    model = keras.models.load_model(model_path)
-    if isinstance(model, keras.models.Model): # This is done just to specify the code that model is a keras model
-        # Ensure input_df is a numpy array
-        if isinstance(input_df, pd.DataFrame):
-            input_data = input_df.values
-        else:
-            input_data = input_df
-        
-        prediction = model.predict(input_data)
-        return prediction
-    else:
-        raise ValueError("Failed to load the model.")
 
 def denormalize_data(data, max, min):
     return data * (max - min) + min
@@ -82,8 +64,6 @@ def destandardize_data(data, mean, std):
 if __name__ == '__main__':
 
     input_df = generate_input_data()
-    print(input_df)
-    print('Original shape: ', input_df.shape)
     mean, std, max, min = get_values_from_pkl('C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/values.pkl')
     
     print('Normalization and standardization of the input data...')
@@ -93,13 +73,15 @@ if __name__ == '__main__':
     # std_df = std_df.drop(columns=['Mod index'])
 
     print('Predicting the data...')
-    norm_prediction = prediction(norm_df, norm_model_path)
+    model = keras.models.load_model(norm_model_path, compile=True)
+    if isinstance(model, keras.models.Model): # This is done just to specify the code that model is a keras model
+        norm_prediction = model.predict(norm_df.values)
+
     # std_prediction = prediction(std_df, std_model_path)
     # fine_prediction = prediction(norm_df, fine_model_path)
 
     # Append 'Mod index' as the last column
     norm_df['Mod index'] = norm_prediction.flatten()
-    print('Norm prediction:\n', norm_prediction)
     # std_df['Mod index'] = std_prediction.flatten()
     # norm_df['Mod index'] = fine_prediction.flatten()
 

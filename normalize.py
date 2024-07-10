@@ -11,12 +11,17 @@ values_path = 'C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/values.pk
 fine_values_path = 'C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/fine_values.pkl'
 
 df = pd.read_csv(exit_path)
-df = df.drop(columns=['Intervalley', 'Main F Freq'])
+df = df.drop(columns=['Intervalley'])
 
 mean = df.mean()
 std = df.std()
 max = df.max()
 min = df.min()
+
+print('Mean:\n', mean)
+print('Standard deviation:\n', std)
+print('Maximum:\n', max)
+print('Minimum:\n', min)
 
 # Save the values
 with open(values_path, 'wb') as f:
@@ -40,7 +45,6 @@ df = df * (max - min) + min
 # Standardize and normalize the data (checking which is best later)
 # std_df = (df - mean) / std
 norm_df = (df - min) / (max - min)
-
 # norm_df['Wo'] = 0
 
 # norm_df.to_csv(norm_reduced_path, index=False)

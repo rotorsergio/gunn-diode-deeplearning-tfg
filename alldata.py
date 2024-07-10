@@ -4,20 +4,15 @@ import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
 import matplotlib # for plotting
 import matplotlib.pyplot as plt # for plotting
 matplotlib.use('Agg') # for non-interactive plotting
-from scipy.fft import fft,fftfreq # scientific computing (used for fourier transform)
 from tqdm import tqdm # for progress bar
 
 # PARAMETERS ======================================================================================
 parent_dir = 'D:/datos_montecarlo'
 datafile_name = 'corr_reduced'
 plot_name = 'plot.png'
-fourier_name = 'fourier.png'
-exit_path = 'C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/exit.csv'
+exit_path = 'C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/datasets/exit.csv'
 dt=2e-16 # 0,2 fs time step
 window_size = 2000 # window size for smoothing
-plot_focus=10e9 # focus on the first 10 GHz
-figure_size=(16,9) # figure size
-perform_fourier = True
 perform_plots = True
 # =================================================================================================
 
@@ -39,27 +34,11 @@ def smoothening(valid_data):
 def modulation_index(data):
     max_current = data['Smoothened_Current'].max() # maximum current density
     min_current = data['Smoothened_Current'].min() # minimum current density
-    modulation_index = (max_current - min_current) / ( data['Smoothened_Current'].mean()) # modulation index
+    modulation_index = (max_current - min_current) / ( data['Smoothened_Current'].mean())
     return modulation_index
-def power_spectrum_density(data_array, N):
-    fft_amplitude = fft(data_array)[:N//2] # fourier transform of the current density
-    fft_freq = fftfreq(N, dt)[:N//2] # fourier frequencies
-    array_PSD = ((np.abs(fft_amplitude))**2)*2//N # type: ignore # power spectral density, normalized (single sided, N datapoints)
-    return array_PSD, fft_freq
-def plot_fourier(df, ax, logy=False):
-    df.plot(
-        ax=ax,
-        x='Frequency',
-        y=['Amplitude','Smoothed amplitude'],
-        title='Fourier transform of current density in Gunn diode',
-        xlabel='Frequency (Hz)',
-        ylabel='Current PSD',
-        xlim=([0, plot_focus]) if logy else None,
-        logy=logy,
-        **plot_config
-    )
+
 plot_config = {
-    'figsize': figure_size,
+    'figsize': (8,6),
     'style': ['b:','r-'],
     'grid': True
 }
@@ -95,19 +74,6 @@ def process_file(datafile_name):
     data = data[data.index >= 200000] # ignore thermalization data
     mod_index = modulation_index(data)
 
-    currents_array=data['Current'].to_numpy()
-    smoothened_array=data['Smoothened_Current'].to_numpy()
-    dc_current = np.mean(currents_array)
-    dc_smoothened = np.mean(smoothened_array)
-    ac_array = currents_array - dc_current
-    smoothened_ac_array = smoothened_array - dc_smoothened
-
-    ac_df=pd.DataFrame({
-        'Time':data['Time'],
-        'AC':ac_array,
-        'Smoothened_AC':smoothened_ac_array
-    }) # type: ignore # create a dataframe with the oscillation data
-
     if perform_plots:
         # plot the datafile
         data.plot(
@@ -115,67 +81,41 @@ def process_file(datafile_name):
             y=['Current','Smoothened_Current'],
             title='Current density in Gunn diode',
             xlabel='Time (s)',
-            ylabel=' Drain current density',
+            ylabel=' Drain current density ($A/m$)',
             xlim=([2e5*dt,5e5*dt]),  # limit x axis
             **plot_config
         )
         plt.margins(x=0)
         plt.tight_layout()
 
+        # Textbox content using Matplotlib's MathText
+        textstr = '\n'.join((
+            r'$W_0$ = ' + f'{Wo:.0f} nm',
+            r'$V_{DS}$ = ' + f'{Vds:.0f} V',
+            r'T = ' + f'{Temp:.0f} K',
+            r'$\epsilon_{1 \rightarrow 2}$ = ' + intervalley + ' eV',
+            r'$N_D$ = ' + f'{Nd}' + r' $m^{-2}$',
+            r'Mod. index = ' + f'{mod_index:.4f}'
+            ))
+
+        # Place a text box in upper left in axes coords
+        props = dict(boxstyle='round', facecolor='wheat', alpha=0.7)
+        plt.gca().text(0.05, 0.95, textstr, transform=plt.gca().transAxes, fontsize=10,
+                       verticalalignment='top', bbox=props)
+
         dir=os.path.dirname(datafile_name)
         plot_path=os.path.join(dir,plot_name)
         plt.savefig(plot_path) # save the plot as a png file
         plt.close('all')
-
-    # FOURIER TRANSFORM
-
-    if perform_fourier:
-        N=len(data) # number of data points
-
-        windowed_ac = np.hanning(N)*ac_array # apply a hanning window to the data
-        windowed_smoothened = np.hanning(N)*smoothened_ac_array # apply a hanning window to the data
-
-        ac_amplitude, ac_frequency = power_spectrum_density(windowed_ac, N)
-        smoothened_amplitude, _ = power_spectrum_density(windowed_smoothened, N)
-
-        PSD_df = pd.DataFrame({
-            'Frequency': ac_frequency, 
-            'Amplitude': ac_amplitude,
-            'Smoothed amplitude': smoothened_amplitude
-        })
-
-        FMA = PSD_df['Frequency'][PSD_df['Amplitude'].idxmax()] # Frequency of Maximum Amplitude  
-
-        if perform_plots:
-            _, axs = plt.subplots(2, figsize=figure_size)
-            plot_fourier(PSD_df, axs[0])
-            plot_fourier(PSD_df, axs[1], logy=True)
-            plt.tight_layout()
-            fourier_path=os.path.join(dir,fourier_name)
-            plt.savefig(fourier_path) # save the fourier plot as a png file
-            
-            plt.close('all')
-
-        exit_df = pd.DataFrame({
-            'Wo': [Wo],
-            'Vds': [Vds],
-            'Temp': [Temp],
-            'Intervalley': [intervalley],
-            'Nd': [Nd],
-            'Mod index': [mod_index],
-            'FMA': [FMA]
-        })
-    else:
-        FMA = 0
-        exit_df = pd.DataFrame({
-            'Wo': [Wo],
-            'Vds': [Vds],
-            'Temp': [Temp],
-            'Intervalley': [intervalley],
-            'Nd': [Nd],
-            'Mod index': [mod_index],
-            'FMA': [FMA] # FMA = Frequency of Maximum Amplitude
-        })
+ 
+    exit_df = pd.DataFrame({
+        'Wo': [Wo],
+        'Vds': [Vds],
+        'Temp': [Temp],
+        'Intervalley': [intervalley],
+        'Nd': [Nd],
+        'Mod index': [mod_index]
+    })
 
     header = not os.path.isfile(exit_path)
     exit_df.to_csv(exit_path, mode='a', header=header, index=False)
