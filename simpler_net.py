@@ -1,22 +1,20 @@
 ﻿import os
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0' # Disable Tensorflow warnings
-# os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' # Disable Tensorflow warnings
 import pandas as pd
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
-import keras
 from scipy.stats import pearsonr
+import keras
 from tensorflow.python.keras.layers import Dense
-from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import train_test_split
 
-dataset_path = 'C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/datasets/200nm.csv'
-model_path = 'C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/models/simpler.keras'
-lossplot_path = 'C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/plots/loss_simpler.png'
-dispersionplot_path = 'C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/plots/dispersion_simpler.png'
+norm_dataset_path = 'C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/datasets/normalized.csv'
+reduced_norm_dataset_path = 'C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/datasets/norm_200nm.csv'
 
-print('SIMPLER ANN MODEL. SCALED DATA.\n')
+model_path = 'C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/models/model_norm.keras'
+reduced_model_path = 'C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/models/simpler_model.keras'
+
 print('Tensorflow version: ', tf.__version__)
 print('Keras version: ', keras.__version__)
 
@@ -25,97 +23,111 @@ print('Keras version: ', keras.__version__)
 # activation_functions = ['relu', 'tanh', 'sigmoid', 'softmax', 'softplus', 'softsign', 'selu', 'elu', 'exponential']
 # optimizers = ['adam', 'sgd', 'rmsprop', 'adadelta', 'adagrad', 'adamax', 'nadam', 'ftrl']
 
-densidad: int = 20
-funcion_activacion = 'relu'
-funcion_perdida = 'huber'
-optimizador = 'adam'
-random_seed = 47
-number_epochs: int = 200
+random_seed: int = 1
+activation_function = 'sigmoid'
+optimizer_choose = 'adam'
+loss_function = 'mean_squared_error'
+density: int = 10
+number_epochs: int = 2000
+datamode = 'reduced' # Modes: 'exit', 'reduced'
+train_model: bool = True
 
 # =================== NEURAL NETWORK ====================
 
-model = keras.Sequential(
-    [
-        keras.layers.Input(shape=(3,)),
-        keras.layers.Dense(densidad, activation=funcion_activacion),
-        keras.layers.Dense(densidad, activation=funcion_activacion),
-        keras.layers.Dense(densidad, activation=funcion_activacion),
-        keras.layers.Dense(1, activation='linear')
-    ]
-)
+def create_model():
+    model = keras.Sequential(
+        [
+            keras.layers.Input(shape=((4,) if datamode == 'exit' else (3,))),
+            keras.layers.Dense(density, activation=activation_function),
+            keras.layers.Dense(density, activation=activation_function),
+            keras.layers.Dense(1, activation='linear')
+        ]
+    )
 
-model.summary()
-model.compile(optimizer=optimizador, loss=funcion_perdida)
+    model.summary() # print the model summary
 
-# =================== PREPARE DATA ====================
-
-data = pd.read_csv(dataset_path).drop(columns='Wo')
-
-max = data.max()
-min = data.min()
-scaled = (data - min) / (max - min)
-scaled_array = np.array(scaled)
-
-# Last column: target of prediction. The rest: input data
-X = scaled.iloc[:, :-1]
-y = scaled.iloc[:, -1]
-
-Xarray = scaled_array[:, :-1]
-yarray = scaled_array[:, -1]
-
-# Split the dataset into 80% training data and 20% validation data
-# Xtrain, Xval, ytrain, yval = train_test_split(X, y, test_size=0.2, random_state=random_seed)
-Xtrain, Xval, ytrain, yval = train_test_split(Xarray, yarray, test_size=0.2, random_state=random_seed)
-'''
-Xtrain = Xtrain.reset_index(drop=True)
-Xval = Xval.reset_index(drop=True)
-ytrain = ytrain.reset_index(drop=True)
-yval = yval.reset_index(drop=True)
-'''
+    return model
 
 # =================== TRAINING ====================
 
-print('Training the model for normalized data...')
-history = model.fit(Xtrain, ytrain, epochs=number_epochs, validation_data=(Xval, yval), batch_size=32) # Default batch_size = 32 SEEMS TO MATTER A LOT! DON'T USE LOW VALUES
-model.save(model_path)
+norm_df = pd.read_csv(norm_dataset_path) if datamode == 'exit' else pd.read_csv(reduced_norm_dataset_path)
 
-# Print the training history from the model
+# Last column: target of prediction. The rest: input data
+X = norm_df.iloc[:, :-1]
+y = norm_df.iloc[:, -1]
 
-plt.figure(figsize=(16,9))
-plt.plot(history.history['loss'])
-plt.plot(history.history['val_loss'])
-plt.title('Model loss for normalized data')
-plt.xlabel('Epoch')
-plt.ylabel('Loss')
-plt.legend(['Train', 'Validation'], loc='upper right')
-plt.savefig(lossplot_path)
-plt.close()
+# Split the dataset into 80% training data and 20% validation data
+X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=random_seed)
+
+if train_model == True:
+
+    # Create the model for normalized data
+    model_norm = create_model()
+    model_norm.compile(optimizer=optimizer_choose, loss=loss_function)
+
+    print('Training the model for normalized data...')
+    history_norm = model_norm.fit(X_train, y_train, epochs=number_epochs, validation_data=(X_val, y_val), batch_size=32)
+    if datamode == 'exit':
+        model_norm.save(model_path, overwrite=True)
+    elif datamode == 'reduced':
+        model_norm.save(reduced_model_path, overwrite=True)
+    else:
+        raise ValueError('Invalid data mode while training the model.')
+
+    # Print the training history from both models
+
+    plt.figure(figsize=(8, 6))
+    plt.plot(history_norm.history['loss'])
+    plt.plot(history_norm.history['val_loss'])
+    plt.title('Model loss for normalized data')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.legend(['Train', 'Validation'], loc='upper right')
+    if datamode == 'exit':
+        plt.savefig('C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/plots/loss_function_norm.png')
+    elif datamode == 'reduced':
+        plt.savefig('C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/plots/loss_function_simpler.png')
+    else:
+        raise ValueError('Invalid data mode while saving the loss function plot.')
+
+else:
+    if datamode == 'exit':
+        model_norm = keras.models.load_model(model_path)
+    elif datamode == 'reduced':
+        model_norm = keras.models.load_model(reduced_model_path)
+    else:
+        raise ValueError('Invalid data mode while loading the model.')
+
 
 # Represent prediction versus real data
 
-ytrain_predicted = model.predict(Xtrain)
-yval_predicted = model.predict(Xval)
+y_pred_norm_train = model_norm.predict(X_train) # type: ignore --> avoid interpreter false error in model.predict
+y_pred_norm_val = model_norm.predict(X_val) # type: ignore
 
-ytrain_predicted = ytrain_predicted.flatten()
-yval_predicted = yval_predicted.flatten()
+r_train_norm = pearsonr(y_train.values, y_pred_norm_train.flatten())[0]
+r_val_norm = pearsonr(y_val.values, y_pred_norm_val.flatten())[0]
 
-ytrain = ytrain.flatten()
-yval = yval.flatten()
+plt.figure(figsize=(8,6))
 
-ytrain = pd.DataFrame(ytrain, columns=['Real train'])
-yval = pd.DataFrame(yval, columns=['Real validation'])
-predicted_train = pd.DataFrame(ytrain_predicted, columns=['Predicted train'])
-predicted_val = pd.DataFrame(yval_predicted, columns=['Predicted validation'])
-
-train_compare = pd.concat([ytrain, predicted_train], axis=1)
-val_compare = pd.concat([yval, predicted_val], axis=1)
-print(train_compare)
-print(val_compare)
-
-plt.figure(figsize=(16,9))
 plt.subplot(1, 2, 1)
-plt.plot(ytrain, ytrain_predicted, 'o', label='Train', scalex=False, scaley=False)
-plt.title('Train vs prediction')
+plt.plot(y_train, y_pred_norm_train, 'o', label='Train')
+plt.xlabel('Real training data')
+plt.ylabel('Predicted training data')
+plt.plot([0,1],[0,1], 'r') # Diagonal line
+plt.text(0.1, 0.9, f'R = {r_train_norm:.4f}', fontsize=12, color='red')
+
 plt.subplot(1, 2, 2)
-plt.plot(yval, yval_predicted, 'o', label='Validation', scalex=False, scaley=False)
-plt.title('Validation vs prediction')
+plt.plot(y_val, y_pred_norm_val, 'o', label='Validation')
+plt.plot([0,1],[0,1], 'r') # Diagonal line
+plt.text(0.1, 0.9, f'R = {r_val_norm:.4f}', fontsize=12, color='red')
+plt.xlabel('Real validation data')
+plt.ylabel('Predicted validation data')
+
+if datamode == 'exit':
+    plt.savefig('C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/plots/dispersion_norm.png')
+elif datamode == 'reduced':
+    plt.savefig('C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/plots/dispersion_simpler.png')
+else:
+    raise ValueError('Invalid data mode while saving the dispersion plot.')
+
+plt.close()

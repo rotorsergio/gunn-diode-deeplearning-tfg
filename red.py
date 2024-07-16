@@ -79,8 +79,8 @@ else:
 
 # Represent prediction versus real data
 
-y_pred_norm_train = model_norm.predict(X_train)
-y_pred_norm_val = model_norm.predict(X_val)
+y_pred_norm_train = model_norm.predict(X_train) # type: ignore --> avoid interpreter false error in model.predict
+y_pred_norm_val = model_norm.predict(X_val) # type: ignore
 
 r_train_norm = pearsonr(y_train.values, y_pred_norm_train.flatten())[0]
 r_val_norm = pearsonr(y_val.values, y_pred_norm_val.flatten())[0]

@@ -19,27 +19,28 @@ def clear_directory(directory):
 
 clear_directory(heatmaps_dir)
 
-datamode='norm_prediction' # Modes: 'original', 'norm_prediction', 'std_prediction', 'fine', 'og_prediction'
+datamode='fine' # Modes: 'original', 'og_prediction', 'norm_prediction', 'fine, 'fine_prediction'
 map_modes = ['wo-v', 'nd-v']
 mode = map_modes[1]
 
-if datamode == 'original':
-    df = pd.read_csv(os.path.join(datasets_dir, 'exit.csv'))
-    save_dir = os.path.join(heatmaps_dir, 'original')
-elif datamode == 'og_prediction':
-    df = pd.read_csv(os.path.join(datasets_dir, datamode + '.csv'))
-    save_dir = os.path.join(heatmaps_dir, 'og_prediction')
-elif datamode == 'norm_prediction':
-    df = pd.read_csv(os.path.join(datasets_dir, datamode + '.csv'))
-    save_dir = os.path.join(heatmaps_dir, 'norm_prediction')
-elif datamode == 'std_prediction':
-    df = pd.read_csv(os.path.join(datasets_dir, datamode + '.csv'))
-    save_dir = os.path.join(heatmaps_dir, 'std_prediction')
-elif datamode == 'fine':
-    df = pd.read_csv(os.path.join(datasets_dir, 'fine_prediction.csv'))
-    save_dir = os.path.join(heatmaps_dir, 'fine')
-else:
-    raise ValueError('Invalid data mode')
+match datamode:
+    case 'original':
+        df = pd.read_csv(os.path.join(datasets_dir, 'exit.csv'))
+        save_dir = os.path.join(heatmaps_dir, 'original')
+    case 'og_prediction':
+        df = pd.read_csv(os.path.join(datasets_dir, datamode + '.csv'))
+        save_dir = os.path.join(heatmaps_dir, 'og_prediction')
+    case 'norm_prediction':
+        df = pd.read_csv(os.path.join(datasets_dir, datamode + '.csv'))
+        save_dir = os.path.join(heatmaps_dir, 'norm_prediction')
+    case 'fine':
+        df = pd.read_csv(os.path.join(datasets_dir, '200nm.csv'))
+        save_dir = os.path.join(heatmaps_dir, 'fine')
+    case 'fine_prediction':
+        df = pd.read_csv(os.path.join(datasets_dir, datamode + '.csv'))
+        save_dir = os.path.join(heatmaps_dir, 'fine_prediction')
+    case _:
+        raise ValueError('Invalid data mode')
 
 df['Wo']=df['Wo'].astype(int)
 df['Vds']=df['Vds'].astype(int)

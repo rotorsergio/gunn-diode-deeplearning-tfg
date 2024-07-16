@@ -5,15 +5,17 @@ import itertools
 import keras
 
 # ========== CONSTANTS ==========
-desired_number_of_points: int = 21
 
 norm_model_path = 'C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/models/model_norm.keras'
-std_model_path = 'C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/models/model_std.keras'
-fine_model_path = 'C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/models/model_finenorm.keras'
+fine_model_path = 'C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/models/simpler_model.keras'
+
+values_path = 'C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/values.pkl'
+fine_values_path = 'C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/fine_values.pkl'
 
 norm_prediction_path = 'C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/datasets/norm_prediction.csv'
-std_prediction_path = 'C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/datasets/std_prediction.csv'
 fine_prediction_path = 'C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/datasets/fine_prediction.csv'
+
+datamode = 'reduced' # Modes: 'exit', 'reduced'
 
 # ========== FUNCTIONS ==========
 
@@ -21,42 +23,47 @@ def generate_input_data():
 
     # Define the input data
 
-    # Wo = np.arange(200, 360, 8) # last value target: 352
-    Wo = np.arange(200, 356, 4)
+    if datamode == 'exit':
 
-    # Vds = np.arange(10, 65, 5) # last value target: 60
-    Vds = np.arange(1, 61, 1)
+        Wo = np.arange(200, 356, 4) # number of points: 40
+        Vds = np.arange(1, 61, 1) # number of points: 60
+        Temp = np.array([300, 400, 500]) # number of points: 3
+        Nd = np.arange(0.5, 10.5, 0.5)*1e24 # number of points: 20
 
-    Temp = np.array([300, 400, 500])
+        #Create the input dataframe as an iteration of all the possible combinations of the input data
+        combinations = itertools.product(Wo, Vds, Temp, Nd)
+        input_df = pd.DataFrame(combinations, columns=['Wo', 'Vds', 'Temp', 'Nd'])
+    
+    elif datamode == 'reduced':
 
-    # Nd = np.array([0.5, 1, 5, 10])*1e24
-    Nd = np.arange(0.5, 10.5, 0.5)*1e24
+        Vds = np.arange(1, 61, 1) # number of points: 60
+        Temp = np.array([300, 400, 500]) # number of points: 3
+        Nd = np.arange(0.5, 10.5, 0.5)*1e24 # number of points: 20
 
-    #Create the input dataframe as an iteration of all the possible combinations of the input data
-    combinations = itertools.product(Wo, Vds, Temp, Nd)
-    # combinations = itertools.product(Vds, Temp, Nd)
-    input_df = pd.DataFrame(combinations, columns=['Wo', 'Vds', 'Temp', 'Nd'])
-    # input_df = pd.DataFrame(combinations, columns=['Vds', 'Temp', 'Nd'])
-    # input_df['Wo'] = Wo
+        combinations = itertools.product(Vds, Temp, Nd)
+        input_df = pd.DataFrame(combinations, columns=['Vds', 'Temp', 'Nd'])
+    
+    else:
+        raise ValueError('Invalid data mode creating the input data.')
 
     return input_df
 
 def get_values_from_pkl(values_path):
-    with open(values_path, 'rb') as f:
-        values = pkl.load(f)
-        mean = values['mean']
-        std = values['std']
-        max = values['max']
-        min = values['min']
+    if datamode == 'exit':
+        with open(values_path, 'rb') as f:
+            values = pkl.load(f)
+            max = values['max']
+            min = values['min']
+    if datamode == 'reduced':
+        with open(fine_values_path, 'rb') as f:
+            values = pkl.load(f)
+            max = values['max']
+            min = values['min']
 
-    return mean, std, max, min
+    return max, min
 
 def normalize_data(data, max, min):
     data = (data - min) / (max - min)
-    return data
-
-def standardize_data(data, mean, std):
-    data = (data - mean) / std
     return data
 
 def prediction(input_df, model_path):
@@ -79,47 +86,60 @@ def denormalize_data(data, max, min):
     denorm['Nd'] = denorm['Nd'].apply(lambda x: round(x, 1-int(np.floor(np.log10(abs(x)))))) 
     return denorm
 
-def destandardize_data(data, mean, std):
-    return data * std + mean
-
 if __name__ == '__main__':
 
     input_df = generate_input_data()
     print(input_df)
-    mean, std, max, min = get_values_from_pkl('C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/values.pkl')
+    max, min = get_values_from_pkl(values_path) if datamode == 'exit' else get_values_from_pkl(fine_values_path)
     
     print('Normalization and standardization of the input data...')
     norm_df = normalize_data(input_df, max, min)
     norm_df = norm_df.drop(columns=['Mod index'])
-    norm_df = norm_df[['Wo', 'Vds', 'Temp', 'Nd']] # for some reason, normalization inverts the order of the columns...
+
+    if datamode == 'exit': 
+        norm_df = norm_df[['Wo', 'Vds', 'Temp', 'Nd']] # for some reason, normalization inverts the order of the columns...
+    elif datamode == 'reduced':
+        norm_df = norm_df[['Vds', 'Temp', 'Nd']]
+    else:
+        raise ValueError('Invalid data mode normalizing the input data.')
     print(norm_df)
-    # std_df = standardize_data(input_df, mean, std)
-    # std_df = std_df.drop(columns=['Mod index'])
 
     print('Predicting the data...')
-    norm_prediction = prediction(norm_df, norm_model_path)
-    # std_prediction = prediction(std_df, std_model_path)
-    # fine_prediction = prediction(norm_df, fine_model_path)
+    if datamode == 'exit':
+        norm_prediction = prediction(norm_df, norm_model_path)
+    elif datamode == 'reduced':
+        norm_prediction = prediction(norm_df, fine_model_path)
+    else:
+        raise ValueError('Invalid data mode predicting the data.')
 
     # Append 'Mod index' as the last column
     norm_df['Mod index'] = norm_prediction.flatten()
-    # std_df['Mod index'] = std_prediction.flatten()
-    # norm_df['Mod index'] = fine_prediction.flatten()
 
-    norm_df = norm_df[['Wo', 'Vds', 'Temp', 'Nd', 'Mod index']]
-    # std_df = std_df[['Wo', 'Vds', 'Temp', 'Nd', 'Mod index']]
+    if datamode == 'exit':
+        norm_df = norm_df[['Wo', 'Vds', 'Temp', 'Nd', 'Mod index']]
+    elif datamode == 'reduced':
+        norm_df = norm_df[['Vds', 'Temp', 'Nd', 'Mod index']]
+    else:
+        raise ValueError('Invalid data mode appending the prediction data.')
 
     print('Denormalization and destandardization of the prediction data...')
     denorm_df = denormalize_data(norm_df, max, min)
-    # destd_df = destandardize_data(std_df, mean, std)
-    # denorm_df['Wo'] = 200.0
+
+    if datamode == 'reduced':
+        denorm_df['Wo'] = 200.0
+        denorm_df = denorm_df[['Wo', 'Vds', 'Temp', 'Nd', 'Mod index']]
+
 
     print(denorm_df)
     # print(destd_df)
     
     print('Saving the prediction data...')
-    denorm_df.to_csv(norm_prediction_path, index=False)
-    # destd_df.to_csv(std_prediction_path, index=False)
-    # denorm_df.to_csv(fine_prediction_path, index=False)
+
+    if datamode == 'exit':
+        denorm_df.to_csv(norm_prediction_path, index=False)
+    elif datamode == 'reduced':
+        denorm_df.to_csv(fine_prediction_path, index=False)
+    else:
+        raise ValueError('Invalid data mode saving the prediction data.')
 
     print('Prediction data saved successfully.')
