@@ -21,7 +21,7 @@ clear_directory(heatmaps_dir)
 
 datamode='norm_prediction' # Modes: 'original', 'norm_prediction', 'std_prediction', 'fine', 'og_prediction'
 map_modes = ['wo-v', 'nd-v']
-mode = map_modes[0]
+mode = map_modes[1]
 
 if datamode == 'original':
     df = pd.read_csv(os.path.join(datasets_dir, 'exit.csv'))
@@ -44,7 +44,7 @@ else:
 df['Wo']=df['Wo'].astype(int)
 df['Vds']=df['Vds'].astype(int)
 df['Temp']=df['Temp'].astype(int)
-df['Nd'] = df['Nd'].apply(lambda x: round(x, -int(np.floor(np.log10(abs(x)))))) # Round to the nearest order of magnitude
+df['Nd'] = df['Nd'].apply(lambda x: round(x, 1-int(np.floor(np.log10(abs(x)))))) # Round to one decimal place past the nearest order of magnitude
 
 global_min = df['Mod index'].min()
 global_max = df['Mod index'].max()
@@ -61,11 +61,16 @@ elif mode == map_modes[1]:
 else:
     raise ValueError('Invalid heatmap mode')
 
+
 # Outer progress bar
 with tqdm(total=len(fixed_vars), desc="Overall Progress", position=0) as pbar1:
     for var in fixed_vars:
         fig, axs = plt.subplots(1, len(unique_temperatures), figsize=(16,9))
-        
+        fixed_var_text = ""  # Initialize outside the loop
+
+        # Adjust subplot parameters to make room for the text box at the bottom
+        plt.subplots_adjust(bottom=0.2)  # Increase the bottom margin
+
         # Inner progress bar
         with tqdm(total=len(unique_temperatures), desc="Inner Progress", position=1, leave=False) as pbar2:
             for i, temp in enumerate(unique_temperatures):
@@ -74,23 +79,30 @@ with tqdm(total=len(fixed_vars), desc="Overall Progress", position=0) as pbar1:
                     filter_df = df[(df['Temp'] == temp) & (df['Nd'] == var)]
                     mod_df = filter_df.pivot(index='Wo', columns='Vds', values='Mod index')
                     mod_df = mod_df.sort_index(ascending=False)
-                    fixed_var_text = f'$Nd: {var} m^{{-3}}$'
+                    fixed_var_text = f'$N_D = {var} m^{{-2}}$'
                 elif mode == map_modes[1]:
                     filter_df = df[(df['Temp'] == temp) & (df['Wo'] == var)]
                     mod_df = filter_df.pivot(index='Nd', columns='Vds', values='Mod index')
                     mod_df = mod_df.sort_index(ascending=False)
-                    fixed_var_text = f'$Wo: {var} nm$'
+                    fixed_var_text = f'$W_O = {var} nm$'
 
-                im = sns.heatmap(mod_df, ax=axs[i], annot=False, cmap='coolwarm') # , vmin=global_min, vmax=global_max)
-                axs[i].set_title(f'Temperature: {temp} K')
-
-                axs[i].text(0.5, 0.5, f'{fixed_var_text}\n$\\varepsilon_{{1,2}} = 0.9 \\times 10^{{12}}$', 
-                            horizontalalignment='center', verticalalignment='center', 
-                            transform=axs[i].transAxes, color='white', fontsize=14)
-
-                plt.savefig(os.path.join(heatmaps_dir, f'{datamode}', f'{mode}', f'{var}.png'))
+                im = sns.heatmap(mod_df, ax=axs[i], annot=False, cmap='coolwarm')
+                axs[i].set_title(f'Temperature = {temp} K')
 
                 pbar2.update()  # Update inner progress bar after each temperature
+
+        # Add the text box outside the inner loop
+        if mode == map_modes[0] or mode == map_modes[1]:
+            fig.text(0.5, 0.05,
+                     f'{fixed_var_text}\n$\\varepsilon_{{1,2}} = 0.9 \\times 10^{{12}} eV$',
+                     ha='center',
+                     va='center',
+                     fontsize=14, color='black',
+                     bbox=dict(boxstyle="round,pad=0.5", facecolor="wheat", alpha=0.7)
+                     )
+
+        # Save the figure after adding the text box
+        plt.savefig(os.path.join(heatmaps_dir, f'{datamode}', f'{mode}', f'{var}.png'))
 
         plt.close()
         pbar1.update()  # Update outer progress bar after each variable
