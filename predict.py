@@ -36,7 +36,7 @@ def generate_input_data():
     
     elif datamode == 'reduced':
 
-        Vds = np.arange(1, 61, 1) # number of points: 60
+        Vds = np.arange(1, 51, 1) # number of points: 50
         Temp = np.array([300, 400, 500]) # number of points: 3
         Nd = np.arange(0.5, 10.5, 0.5)*1e24 # number of points: 20
 

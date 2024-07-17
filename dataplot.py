@@ -19,7 +19,7 @@ def clear_directory(directory):
 
 clear_directory(heatmaps_dir)
 
-datamode='fine' # Modes: 'original', 'og_prediction', 'norm_prediction', 'fine, 'fine_prediction'
+datamode='fine_prediction' # Modes: 'original', 'og_prediction', 'norm_prediction', 'fine, 'fine_prediction'
 map_modes = ['wo-v', 'nd-v']
 mode = map_modes[1]
 
@@ -66,7 +66,7 @@ else:
 # Outer progress bar
 with tqdm(total=len(fixed_vars), desc="Overall Progress", position=0) as pbar1:
     for var in fixed_vars:
-        fig, axs = plt.subplots(1, len(unique_temperatures), figsize=(16,9))
+        fig, axs = plt.subplots(1, len(unique_temperatures), figsize=(14,5))
         fixed_var_text = ""  # Initialize outside the loop
 
         # Adjust subplot parameters to make room for the text box at the bottom
@@ -80,26 +80,28 @@ with tqdm(total=len(fixed_vars), desc="Overall Progress", position=0) as pbar1:
                     filter_df = df[(df['Temp'] == temp) & (df['Nd'] == var)]
                     mod_df = filter_df.pivot(index='Wo', columns='Vds', values='Mod index')
                     mod_df = mod_df.sort_index(ascending=False)
-                    fixed_var_text = f'$N_D = {var} m^{{-2}}$'
+                    fixed_var_text = rf'$N_D = {var} \  m^{{-2}}$'
                 elif mode == map_modes[1]:
                     filter_df = df[(df['Temp'] == temp) & (df['Wo'] == var)]
                     mod_df = filter_df.pivot(index='Nd', columns='Vds', values='Mod index')
                     mod_df = mod_df.sort_index(ascending=False)
-                    fixed_var_text = f'$W_O = {var} nm$'
+                    fixed_var_text = rf'$W_O = {var} nm$'
 
                 im = sns.heatmap(mod_df, ax=axs[i], annot=False, cmap='coolwarm')
                 axs[i].set_title(f'Temperature = {temp} K')
 
                 pbar2.update()  # Update inner progress bar after each temperature
+        
+        plt.tight_layout(rect=(0, 0.1, 1, 1))
 
         # Add the text box outside the inner loop
         if mode == map_modes[0] or mode == map_modes[1]:
             fig.text(0.5, 0.05,
-                     f'{fixed_var_text}\n$\\varepsilon_{{1,2}} = 0.9 \\times 10^{{12}} eV$',
+                     f'{fixed_var_text}     $\\varepsilon_{{1,2}} = 0.9 \\times 10^{{12}}$ eV',
                      ha='center',
                      va='center',
-                     fontsize=14, color='black',
-                     bbox=dict(boxstyle="round,pad=0.5", facecolor="wheat", alpha=0.7)
+                     color='black', fontsize=14,
+                     bbox=dict(boxstyle="round,pad=0.3", facecolor="wheat", alpha=0.7)
                      )
 
         # Save the figure after adding the text box
