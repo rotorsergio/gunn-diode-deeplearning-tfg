@@ -27,7 +27,7 @@ random_seed: int = 1
 activation_function = 'sigmoid'
 optimizer_choose = 'adam'
 loss_function = 'mean_squared_error'
-density: int = 10
+density: int = 8
 number_epochs: int = 2000
 datamode = 'reduced' # Modes: 'exit', 'reduced'
 train_model: bool = True
@@ -76,13 +76,14 @@ if train_model == True:
 
     # Print the training history from both models
 
-    plt.figure(figsize=(8, 6))
+    plt.figure(figsize=(7, 5))
     plt.plot(history_norm.history['loss'])
     plt.plot(history_norm.history['val_loss'])
     plt.title('Model loss for normalized data')
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
     plt.legend(['Train', 'Validation'], loc='upper right')
+    plt.tight_layout()
     if datamode == 'exit':
         plt.savefig('C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/plots/loss_function_norm.png')
     elif datamode == 'reduced':
@@ -101,27 +102,66 @@ else:
 
 # Represent prediction versus real data
 
+y_train = y_train.reset_index().drop(columns='index')
+y_val = y_val.reset_index().drop(columns='index')
+
 y_pred_norm_train = model_norm.predict(X_train) # type: ignore --> avoid interpreter false error in model.predict
 y_pred_norm_val = model_norm.predict(X_val) # type: ignore
 
-r_train_norm = pearsonr(y_train.values, y_pred_norm_train.flatten())[0]
-r_val_norm = pearsonr(y_val.values, y_pred_norm_val.flatten())[0]
+# ===== TEST OF LABELS OR SMTH  =====
 
-plt.figure(figsize=(8,6))
+# Assuming this is added after the prediction code for training data
+
+# Convert real and predicted training data to numpy arrays for easier subtraction
+real_training_data = y_train.values.flatten()
+predicted_training_data = y_pred_norm_train.flatten()
+
+# Calculate the difference between real and predicted values
+difference = real_training_data - predicted_training_data
+
+# Create a DataFrame with the real data, predicted data, and their difference
+comparison_df = pd.DataFrame({
+    'Real Training Data': real_training_data,
+    'Predicted Training Data': predicted_training_data,
+    'Difference': difference
+})
+
+# Print the DataFrame
+print(comparison_df)
+
+# Find discrepancies greater than 0.1
+discrepancies_over_01 = comparison_df[comparison_df['Difference'].abs() > 0.1]
+count_discrepancies_over_01 = discrepancies_over_01.shape[0] # Number of discrepancies greater than 0.1
+print("Discrepancies greater than 0.1: ", count_discrepancies_over_01)
+print(discrepancies_over_01)
+
+# Optional: Save the DataFrame to a CSV file for further analysis
+comparison_df.to_csv('C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/datasets/training_data_comparison.csv', index=False)
+
+# END OF IT
+
+r_train_norm = pearsonr(y_train.values.flatten(), y_pred_norm_train.flatten())[0]
+r_val_norm = pearsonr(y_val.values.flatten(), y_pred_norm_val.flatten())[0]
+
+plt.figure(figsize=(12,6))
 
 plt.subplot(1, 2, 1)
-plt.plot(y_train, y_pred_norm_train, 'o', label='Train')
+plt.plot(y_train.values.flatten(), y_pred_norm_train.flatten(), 'o')
+plt.grid()
 plt.xlabel('Real training data')
 plt.ylabel('Predicted training data')
 plt.plot([0,1],[0,1], 'r') # Diagonal line
 plt.text(0.1, 0.9, f'R = {r_train_norm:.4f}', fontsize=12, color='red')
 
 plt.subplot(1, 2, 2)
-plt.plot(y_val, y_pred_norm_val, 'o', label='Validation')
+plt.plot(y_val.values.flatten(), y_pred_norm_val.flatten(), 'o')
+plt.grid()
 plt.plot([0,1],[0,1], 'r') # Diagonal line
 plt.text(0.1, 0.9, f'R = {r_val_norm:.4f}', fontsize=12, color='red')
 plt.xlabel('Real validation data')
 plt.ylabel('Predicted validation data')
+
+plt.tight_layout()
 
 if datamode == 'exit':
     plt.savefig('C:/Users/sergi/repositorios/gunn-diode-deeplearning-tfg/plots/dispersion_norm.png')

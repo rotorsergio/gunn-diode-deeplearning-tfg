@@ -64,7 +64,7 @@ if train_model == True:
 
     # Print the training history from both models
 
-    plt.figure(figsize=(16, 9))
+    plt.figure(figsize=(12, 6))
     plt.plot(history_norm.history['loss'])
     plt.plot(history_norm.history['val_loss'])
     plt.title('Model loss for normalized data')
@@ -85,7 +85,7 @@ y_pred_norm_val = model_norm.predict(X_val) # type: ignore
 r_train_norm = pearsonr(y_train.values, y_pred_norm_train.flatten())[0]
 r_val_norm = pearsonr(y_val.values, y_pred_norm_val.flatten())[0]
 
-plt.figure(figsize=(8,6))
+plt.figure(figsize=(12,6))
 
 plt.subplot(1, 2, 1)
 plt.plot(y_train, y_pred_norm_train, 'o', label='Train')
